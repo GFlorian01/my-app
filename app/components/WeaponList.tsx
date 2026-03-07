@@ -17,7 +17,8 @@ function getSafeRangeType(rangeType: any): string[] {
   if (Array.isArray(rangeType)) return rangeType;
   if (typeof rangeType === 'string') {
     try {
-      return JSON.parse(rangeType);
+      const parsed = JSON.parse(rangeType);
+      return Array.isArray(parsed) ? parsed : [];
     } catch {
       return [];
     }
@@ -27,9 +28,10 @@ function getSafeRangeType(rangeType: any): string[] {
 
 type WeaponListProps = {
   weaponConfigs: WeaponConfig[];
+  onCopyCountUpdate: (id: number, newCount: number) => void;
 };
 
-const WeaponList = ({ weaponConfigs }: WeaponListProps) => {
+const WeaponList = ({ weaponConfigs, onCopyCountUpdate }: WeaponListProps) => {
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
 
   const handleCopy = async (code: string, index: number, id: number) => {
@@ -38,17 +40,21 @@ const WeaponList = ({ weaponConfigs }: WeaponListProps) => {
       setCopiedIndex(index);
       setTimeout(() => setCopiedIndex(null), 2000);
 
-      // Incrementar contador en la base de datos
-      await fetch('/api/weaponConfigs', {
+      // Incrementar contador en la base de datos y actualizar localmente
+      const response = await fetch('/api/weaponConfigs', {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ id }),
       });
-
-      // Actualizar localmente el contador
-      // Nota: En una app real, podrías recargar las configs o usar state management
+      if (response.ok) {
+        const data = await response.json();
+        // Actualizar el contador localmente
+        if (data.config) {
+          onCopyCountUpdate(id, data.config.copy_count);
+        }
+      }
     } catch (err) {
       console.error('Error al copiar:', err);
     }
@@ -57,10 +63,10 @@ const WeaponList = ({ weaponConfigs }: WeaponListProps) => {
   // Selección de imagen según el tipo de alcance (usa el primero si hay múltiples)
   const getWeaponImage = (rangeTypes: string[] = []) => {
     const primaryRange = rangeTypes[0] || 'Corto Alcance';
-    if (primaryRange === 'Corto Alcance') return '/img/df-corto.jpg';
-    if (primaryRange === 'Medio Alcance') return '/img/df-medio.jpg';
-    if (primaryRange === 'Largo Alcance') return '/img/df-largo.jpg';
-    return '/img/df-corto.jpg';
+    if (primaryRange === 'Corto Alcance') return '/img/asalto_01.jpg';
+    if (primaryRange === 'Medio Alcance') return '/img/smg_01.jpg';
+    if (primaryRange === 'Largo Alcance') return '/img/francotirador_01.jpg';
+    return '/img/asalto_01.jpg'; // Default
   };
 
   return (
