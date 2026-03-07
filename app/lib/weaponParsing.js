@@ -1,5 +1,5 @@
 const CANONICAL_WEAPON_TYPES = [
-  { key: 'fusil de asalto', label: 'Fusil de Asalto' },
+  { key: 'fusil de asalto', label: 'fusil de asalto' },
   { key: 'fuzil de combate', label: 'Fuzil de combate' },
   { key: 'subfusil', label: 'Subfusil' },
   { key: 'pistola', label: 'Pistola' },
@@ -29,6 +29,12 @@ const normalizeGameMode = (modePart) => {
     return 'Conflicto Bélico';
   }
   return modePart.trim();
+};
+
+export const normalizeWeaponType = (weaponType) => {
+  const normalized = normalizeKey(weaponType);
+  if (normalized === 'fusil de asalto') return 'fusil de asalto';
+  return weaponType.trim();
 };
 
 const extractParts = (code) => {
@@ -93,6 +99,7 @@ export const parseWeaponCode = (code) => {
 
   const { weaponPart, modePart, codePart } = parts;
   const { weaponType, weaponName } = detectWeaponTypeAndName(weaponPart);
+  const normalizedWeaponType = normalizeWeaponType(weaponType);
   const gameMode = normalizeGameMode(modePart);
   const isValid =
     Boolean(weaponName) &&
@@ -112,7 +119,7 @@ export const parseWeaponCode = (code) => {
   });
 
   return {
-    weaponType,
+    weaponType: normalizedWeaponType,
     weaponName,
     gameMode,
     codePart,

@@ -1,8 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '../../../lib/supabase';
+import { normalizeWeaponType } from '../../lib/weaponParsing';
 
 export async function GET() {
   try {
+    await supabase
+      .from('weapon_configs')
+      .update({ weapon_type: 'fusil de asalto' })
+      .in('weapon_type', ['Fusil de Asalto', 'Fusil de asalto', 'fusil de asalto']);
+
     const { data, error } = await supabase
       .from('weapon_configs')
       .select('*')
@@ -44,7 +50,7 @@ export async function POST(request: NextRequest) {
       .insert([{
         username: newConfig.username,
         weapon_code: newConfig.weaponCode,
-        weapon_type: newConfig.weaponType,
+        weapon_type: normalizeWeaponType(newConfig.weaponType || ''),
         weapon_name: newConfig.weaponName,
         game_mode: newConfig.gameMode,
         range_type: newConfig.rangeType,

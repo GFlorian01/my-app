@@ -12,8 +12,16 @@ test('parsea G18 como pistola con modo Operación: Extracción', () => {
 
 test('parsea CI-19 completo y modo Operación: Extracción', () => {
   const result = parseWeaponCode('Fusil de asalto CI-19-Operación: Extracción-6JB3G4K0DG7QNAIJM37DJ');
-  assert.equal(result.weaponType, 'Fusil de Asalto');
+  assert.equal(result.weaponType, 'fusil de asalto');
   assert.equal(result.weaponName, 'CI-19');
+  assert.equal(result.gameMode, 'Operación: Extracción');
+  assert.equal(result.isValid, true);
+});
+
+test('normaliza Fusil de Asalto a fusil de asalto', () => {
+  const result = parseWeaponCode('Fusil de Asalto K437-Operación: Extracción-6JB3J4K0DG7QNAIJM37DJ');
+  assert.equal(result.weaponType, 'fusil de asalto');
+  assert.equal(result.weaponName, 'K437');
   assert.equal(result.gameMode, 'Operación: Extracción');
   assert.equal(result.isValid, true);
 });

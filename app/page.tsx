@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import WeaponForm from './components/WeaponForm';
 import WeaponList from './components/WeaponList';
+import { normalizeWeaponType } from './lib/weaponParsing';
 
 type WeaponConfig = {
   id?: number;
@@ -50,7 +51,7 @@ const HomePage = () => {
       id: item.id,
       username: item.username || '',
       weaponCode: item.weapon_code || item.weaponCode || '',
-      weaponType: item.weapon_type || item.weaponType || '',
+      weaponType: normalizeWeaponType(item.weapon_type || item.weaponType || ''),
       weaponName: item.weapon_name || item.weaponName || '',
       gameMode: item.game_mode || item.gameMode || '',
       rangeType: (() => {
