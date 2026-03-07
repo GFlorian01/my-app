@@ -130,7 +130,7 @@ const HomePage = () => {
       <header className="flex items-center justify-between p-6 bg-black bg-opacity-50">
         <div className="flex items-center space-x-4">
           <Image
-            src="/img/delta-force-logo.png"
+            src="/img/logo_01.png"
             alt="Delta Force Logo"
             width={180}
             height={40}
