@@ -17,6 +17,22 @@ type WeaponConfig = {
   created_at?: string;
 };
 
+type RawWeaponConfig = {
+  id?: number;
+  username?: string;
+  weapon_code?: string;
+  weaponCode?: string;
+  weapon_type?: string;
+  weaponType?: string;
+  weapon_name?: string;
+  weaponName?: string;
+  game_mode?: string;
+  gameMode?: string;
+  range_type?: unknown;
+  copy_count?: number;
+  created_at?: string;
+};
+
 const HomePage = () => {
   const [weaponConfigs, setWeaponConfigs] = useState<WeaponConfig[]>([]);
   const [loading, setLoading] = useState(true);
@@ -24,9 +40,11 @@ const HomePage = () => {
   const [gameModeFilter, setGameModeFilter] = useState('');
   const [weaponTypeFilter, setWeaponTypeFilter] = useState('');
   const [rangeTypeFilter, setRangeTypeFilter] = useState('');
+  const [isMobile, setIsMobile] = useState(false);
+  const [videoLoaded, setVideoLoaded] = useState(false);
 
   // Función para normalizar un item de Supabase
-  const normalizeWeaponConfig = (item: any): WeaponConfig => {
+  const normalizeWeaponConfig = (item: RawWeaponConfig): WeaponConfig => {
     return {
       id: item.id,
       username: item.username || '',
@@ -35,10 +53,11 @@ const HomePage = () => {
       weaponName: item.weapon_name || item.weaponName || '',
       gameMode: item.game_mode || item.gameMode || '',
       rangeType: (() => {
-        if (Array.isArray(item.range_type)) return item.range_type;
+        if (Array.isArray(item.range_type)) return item.range_type as string[];
         if (typeof item.range_type === 'string') {
           try {
-            return JSON.parse(item.range_type);
+            const parsed = JSON.parse(item.range_type);
+            return Array.isArray(parsed) ? parsed : [];
           } catch {
             return [];
           }
@@ -69,6 +88,23 @@ const HomePage = () => {
     fetchConfigs();
   }, []);
 
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(max-width: 768px)');
+    const update = (matches: boolean) => setIsMobile(matches);
+    update(mediaQuery.matches);
+    const listener = (event: MediaQueryListEvent) => update(event.matches);
+    if (mediaQuery.addEventListener) {
+      mediaQuery.addEventListener('change', listener);
+      return () => mediaQuery.removeEventListener('change', listener);
+    }
+    mediaQuery.addListener(listener);
+    return () => mediaQuery.removeListener(listener);
+  }, []);
+
+  useEffect(() => {
+    setVideoLoaded(false);
+  }, [isMobile]);
+
   // Calcular top 3
   const top3 = [...weaponConfigs]
     .sort((a, b) => {
@@ -79,18 +115,26 @@ const HomePage = () => {
     })
     .slice(0, 3);
 
+  const getCreatedAtTime = (config: WeaponConfig) => {
+    if (!config.created_at) return 0;
+    const time = Date.parse(config.created_at);
+    return Number.isNaN(time) ? 0 : time;
+  };
+
   // Filtrar configuraciones
   const filteredConfigs = weaponConfigs.filter(config => {
     if (gameModeFilter && config.gameMode !== gameModeFilter) return false;
     if (weaponTypeFilter && config.weaponType !== weaponTypeFilter) return false;
     if (rangeTypeFilter && !config.rangeType.includes(rangeTypeFilter)) return false;
     return true;
-  });
+  }).sort((a, b) => getCreatedAtTime(b) - getCreatedAtTime(a));
 
   // Opciones para filtros
   const gameModeOptions = [...new Set(weaponConfigs.map(c => c.gameMode))];
   const weaponTypeOptions = [...new Set(weaponConfigs.map(c => c.weaponType))];
   const rangeTypeOptions = ['Corto Alcance', 'Medio Alcance', 'Largo Alcance'];
+  const videoSrc = isMobile ? '/img/mb_bg_01.mp4' : '/img/pc_bg_01.mp4';
+  const posterSrc = '/img/banner_01.jpg';
 
   const handleAddWeaponConfig = async (config: WeaponConfig) => {
     try {
@@ -104,7 +148,7 @@ const HomePage = () => {
       if (response.ok) {
         const data = await response.json();
         const normalized = normalizeWeaponConfig(data.config);
-        setWeaponConfigs([...weaponConfigs, normalized]);
+        setWeaponConfigs([normalized, ...weaponConfigs]);
         setErrorMessage('');
       } else {
         const errorData = await response.json();
@@ -125,10 +169,10 @@ const HomePage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-700 text-white">
+    <div className="app-container min-h-screen bg-gradient-to-b from-gray-900 to-gray-700 text-white">
       {/* Header */}
-      <header className="flex items-center justify-between p-6 bg-black bg-opacity-50">
-        <div className="flex items-center space-x-4">
+      <header className="site-header flex items-center justify-between p-6 bg-black bg-opacity-50">
+        <div className="site-logo flex items-center space-x-4">
           <Image
             src="/img/logo_01.png"
             alt="Delta Force Logo"
@@ -137,9 +181,9 @@ const HomePage = () => {
             className="rounded bg-transparent"
             priority
           />
-          <h1 className="text-2xl font-bold">Delta Force Community Hub</h1>
+          <h1 className="site-title text-2xl font-bold">Delta Force Community Hub</h1>
         </div>
-        <nav>
+        <nav className="site-nav">
           <ul className="flex space-x-6">
             <li><a href="#welcome" className="hover:text-yellow-400">Inicio</a></li>
             <li><a href="#share" className="hover:text-yellow-400">Compartir</a></li>
@@ -148,11 +192,46 @@ const HomePage = () => {
         </nav>
       </header>
 
+      {/* Bienvenida */}
+      <section id="welcome" className="welcome-section section-block text-center py-20 px-6">
+        <div className="video-background">
+          <Image
+            src={posterSrc}
+            alt="Fondo Delta Force"
+            width={1600}
+            height={900}
+            className={`video-fallback ${videoLoaded ? 'is-hidden' : ''}`}
+            loading="lazy"
+          />
+          <video
+            key={videoSrc}
+            className={`video-media ${videoLoaded ? 'is-loaded' : ''}`}
+            autoPlay
+            loop
+            muted
+            playsInline
+            preload="none"
+            poster={posterSrc}
+            onLoadedData={() => setVideoLoaded(true)}
+          >
+            <source src={videoSrc} type="video/mp4" />
+          </video>
+          <div className="video-overlay" />
+        </div>
+        <div className="welcome-content">
+          <h2 className="welcome-title text-4xl font-bold mb-4">¡Bienvenido a la Comunidad de Delta Force!</h2>
+          <p className="welcome-text text-xl mb-8 max-w-2xl mx-auto">
+            Comparte tus configuraciones de armas personalizadas, descubre builds de otros jugadores y mejora tu experiencia en el juego.
+            Tanto para Conflicto Bélico como para Operaciones, encuentra códigos para armas de corto, medio y largo alcance.
+          </p>
+        </div>
+      </section>
+
       {/* Top 3 Armas Más Copiadas */}
       {top3.length > 0 && (
-        <section className="py-10 px-6 bg-gray-800">
+        <section className="section-block py-10 px-6 bg-gray-800">
           <div className="max-w-4xl mx-auto">
-            <h2 className="text-3xl font-bold text-center mb-8 text-yellow-400">Top 3 Armas Más Copiadas</h2>
+            <h2 className="section-title text-3xl font-bold text-center mb-8 text-yellow-400">Top 3 Armas Más Copiadas</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {top3.map((config, index) => (
                 <div key={config.id} className="bg-gray-700 p-6 rounded-lg shadow-lg text-center">
@@ -168,45 +247,28 @@ const HomePage = () => {
         </section>
       )}
 
-      {/* Bienvenida */}
-      <section id="welcome" className="text-center py-20 px-6">
-        <h2 className="text-4xl font-bold mb-4">¡Bienvenido a la Comunidad de Delta Force!</h2>
-        <p className="text-xl mb-8 max-w-2xl mx-auto">
-          Comparte tus configuraciones de armas personalizadas, descubre builds de otros jugadores y mejora tu experiencia en el juego.
-          Tanto para Conflicto Bélico como para Operaciones, encuentra códigos para armas de corto, medio y largo alcance.
-        </p>
-        <Image
-          src="/img/banner_01.jpg"
-          alt="Banner Delta Force"
-          width={800}
-          height={400}
-          className="mx-auto rounded-lg shadow-lg"
-          priority
-        />
-      </section>
-
       {/* Sección Compartir */}
-      <section id="share" className="py-20 px-6 bg-gray-800">
+      <section id="share" className="section-block py-20 px-6 bg-gray-800">
         <div className="max-w-4xl mx-auto">
-          <h3 className="text-3xl font-bold text-center mb-10">Comparte tu Configuración</h3>
+          <h3 className="section-title text-3xl font-bold text-center mb-10">Comparte tu Configuración</h3>
           {errorMessage && <p className="text-red-500 text-center mb-4">{errorMessage}</p>}
           <WeaponForm onSubmit={handleAddWeaponConfig} />
         </div>
       </section>
 
       {/* Sección Configuraciones */}
-      <section id="configs" className="py-20 px-6">
+      <section id="configs" className="section-block py-20 px-6">
         <div className="max-w-4xl mx-auto">
-          <h3 className="text-3xl font-bold text-center mb-10">Configuraciones Compartidas</h3>
+          <h3 className="section-title text-3xl font-bold text-center mb-10">Configuraciones Compartidas</h3>
           
           {/* Filtros */}
-          <div className="mb-8 flex flex-wrap justify-center gap-4">
+          <div className="filter-bar mb-8 flex flex-wrap justify-center gap-4">
             <div>
               <label className="block text-sm font-medium mb-2">Modo de Juego:</label>
               <select
                 value={gameModeFilter}
                 onChange={(e) => setGameModeFilter(e.target.value)}
-                className="p-2 bg-gray-700 border border-gray-500 rounded"
+                className="filter-select p-2 bg-gray-700 border border-gray-500 rounded"
               >
                 <option value="">Todos</option>
                 {gameModeOptions.map(mode => (
@@ -219,7 +281,7 @@ const HomePage = () => {
               <select
                 value={weaponTypeFilter}
                 onChange={(e) => setWeaponTypeFilter(e.target.value)}
-                className="p-2 bg-gray-700 border border-gray-500 rounded"
+                className="filter-select p-2 bg-gray-700 border border-gray-500 rounded"
               >
                 <option value="">Todos</option>
                 {weaponTypeOptions.map(type => (
@@ -232,7 +294,7 @@ const HomePage = () => {
               <select
                 value={rangeTypeFilter}
                 onChange={(e) => setRangeTypeFilter(e.target.value)}
-                className="p-2 bg-gray-700 border border-gray-500 rounded"
+                className="filter-select p-2 bg-gray-700 border border-gray-500 rounded"
               >
                 <option value="">Todos</option>
                 {rangeTypeOptions.map(range => (

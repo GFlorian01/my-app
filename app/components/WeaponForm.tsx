@@ -1,6 +1,15 @@
 import React, { useState } from 'react';
 
-const WeaponForm = ({ onSubmit }: { onSubmit: (data: any) => void }) => {
+type WeaponFormData = {
+  username: string;
+  weaponCode: string;
+  weaponType: string;
+  weaponName: string;
+  gameMode: string;
+  rangeType: string[];
+};
+
+const WeaponForm = ({ onSubmit }: { onSubmit: (data: WeaponFormData) => void }) => {
   const [username, setUsername] = useState('');
   const [weaponCode, setWeaponCode] = useState('');
   const [weaponType, setWeaponType] = useState('');
@@ -175,7 +184,7 @@ const WeaponForm = ({ onSubmit }: { onSubmit: (data: any) => void }) => {
           ))}
         </div>
       </div>
-      <button type="submit" className="w-full bg-yellow-500 hover:bg-yellow-600 text-black font-bold py-3 px-4 rounded transition duration-300">
+      <button type="submit" className="tap-button w-full bg-yellow-500 hover:bg-yellow-600 text-black font-bold py-3 px-4 rounded transition duration-300">
         Compartir Configuración
       </button>
     </form>

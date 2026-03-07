@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import Image from 'next/image';
 
 type WeaponConfig = {
@@ -13,7 +13,7 @@ type WeaponConfig = {
   created_at?: string;
 };
 
-function getSafeRangeType(rangeType: any): string[] {
+function getSafeRangeType(rangeType: unknown): string[] {
   if (Array.isArray(rangeType)) return rangeType;
   if (typeof rangeType === 'string') {
     try {
@@ -33,6 +33,8 @@ type WeaponListProps = {
 
 const WeaponList = ({ weaponConfigs, onCopyCountUpdate }: WeaponListProps) => {
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
+  const cooldownTimers = useRef<Record<number, ReturnType<typeof setTimeout> | null>>({});
+  const copyCooldownMs = 2000;
 
   const handleCopy = async (code: string, index: number, id: number) => {
     try {
@@ -40,7 +42,13 @@ const WeaponList = ({ weaponConfigs, onCopyCountUpdate }: WeaponListProps) => {
       setCopiedIndex(index);
       setTimeout(() => setCopiedIndex(null), 2000);
 
-      // Incrementar contador en la base de datos y actualizar localmente
+      if (cooldownTimers.current[id]) {
+        return;
+      }
+      cooldownTimers.current[id] = setTimeout(() => {
+        cooldownTimers.current[id] = null;
+      }, copyCooldownMs);
+
       const response = await fetch('/api/weaponConfigs', {
         method: 'PATCH',
         headers: {
@@ -93,7 +101,7 @@ const WeaponList = ({ weaponConfigs, onCopyCountUpdate }: WeaponListProps) => {
               <p className="mb-2 text-sm text-gray-400">Copiado {config.copy_count || 0} veces</p>
               <button
                 onClick={() => handleCopy(config.weaponCode, index, config.id!)}
-                className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded transition duration-300"
+                className="tap-button bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded transition duration-300"
               >
                 {copiedIndex === index ? '¡Copiado!' : 'Copiar Código'}
               </button>
