@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { parseWeaponCode } from '../lib/weaponParsing';
 
 type WeaponFormData = {
   username: string;
@@ -17,54 +18,19 @@ const WeaponForm = ({ onSubmit }: { onSubmit: (data: WeaponFormData) => void }) 
   const [gameMode, setGameMode] = useState('Conflicto Bélico');
   const [rangeType, setRangeType] = useState<string[]>([]); // Array para múltiples selecciones
 
-  const weaponTypes = [
-    "Fusil de Asalto",
-    "Fuzil de combate",
-    "Subfusil",
-    "Pistola",
-    "Escopeta",
-    "Francotirador",
-    "Ametralladora Ligera",
-    // Agregar más según sea necesario
-  ];
-
-  const parseWeaponCode = (code: string) => {
-    const parts = code.split('-');
-    if (parts.length >= 3) {
-      const firstPart = parts[0].trim();
-      let weaponType = '';
-      let weaponName = '';
-      for (const type of weaponTypes) {
-        if (firstPart.startsWith(type + ' ')) {
-          weaponType = type;
-          weaponName = firstPart.substring(type.length + 1).trim();
-          break;
-        }
-      }
-      if (!weaponType) {
-        // Fallback: último espacio
-        const lastSpaceIdx = firstPart.lastIndexOf(' ');
-        if (lastSpaceIdx !== -1) {
-          weaponType = firstPart.substring(0, lastSpaceIdx).trim();
-          weaponName = firstPart.substring(lastSpaceIdx + 1).trim();
-        }
-      }
-      setWeaponType(weaponType);
-      setWeaponName(weaponName);
-      const modePart = parts[1].trim();
-      if (modePart.toLowerCase().includes('operación')) {
-        setGameMode('Operaciones');
-      } else {
-        setGameMode('Conflicto Bélico');
-      }
-    }
+  const applyParsedWeapon = (code: string) => {
+    const parsed = parseWeaponCode(code);
+    if (!parsed.isValid) return;
+    setWeaponType(parsed.weaponType);
+    setWeaponName(parsed.weaponName);
+    setGameMode(parsed.gameMode);
   };
 
   const handleWeaponCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setWeaponCode(value);
     if (value.includes('-') && value.split('-').length >= 3) {
-      parseWeaponCode(value);
+      applyParsedWeapon(value);
     }
   };
 
@@ -77,22 +43,8 @@ const WeaponForm = ({ onSubmit }: { onSubmit: (data: WeaponFormData) => void }) 
   };
 
   const isValidWeaponCode = (code: string) => {
-    const parts = code.split('-');
-    if (parts.length < 3) return false;
-
-    const [weaponPart, modePart, ...rest] = parts.map(p => p.trim());
-    const codePart = rest.join('-'); // Por si el código tiene guiones internos
-
-    // Validar que la primera parte tenga tipo y nombre (al menos un espacio)
-    if (!weaponPart.includes(' ')) return false;
-
-    // Validar que el código sea alfanumérico mayúscula y tenga al menos 15 caracteres
-    if (codePart.length < 15 || !/^[A-Z0-9]+$/.test(codePart)) return false;
-
-    // Validar que el modo sea válido (no vacío)
-    if (!modePart) return false;
-
-    return true;
+    const parsed = parseWeaponCode(code);
+    return parsed.isValid;
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -166,6 +118,7 @@ const WeaponForm = ({ onSubmit }: { onSubmit: (data: WeaponFormData) => void }) 
         >
           <option value="Conflicto Bélico">Conflicto Bélico</option>
           <option value="Operaciones">Operaciones</option>
+          <option value="Operación: Extracción">Operación: Extracción</option>
         </select>
       </div>
       <div className="mb-4">

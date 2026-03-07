@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import WeaponForm from './components/WeaponForm';
 import WeaponList from './components/WeaponList';
@@ -42,6 +42,7 @@ const HomePage = () => {
   const [rangeTypeFilter, setRangeTypeFilter] = useState('');
   const [isMobile, setIsMobile] = useState(false);
   const [videoLoaded, setVideoLoaded] = useState(false);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
 
   // Función para normalizar un item de Supabase
   const normalizeWeaponConfig = (item: RawWeaponConfig): WeaponConfig => {
@@ -103,6 +104,24 @@ const HomePage = () => {
 
   useEffect(() => {
     setVideoLoaded(false);
+    const v = videoRef.current;
+    if (!v) return;
+    v.muted = true;
+    const tryPlay = () => {
+      v.play().catch(() => {});
+    };
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') tryPlay();
+    };
+    v.addEventListener('canplay', tryPlay, { once: true });
+    v.addEventListener('loadeddata', tryPlay, { once: true });
+    document.addEventListener('visibilitychange', handleVisibility);
+    tryPlay();
+    return () => {
+      v.removeEventListener('canplay', tryPlay);
+      v.removeEventListener('loadeddata', tryPlay);
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
   }, [isMobile]);
 
   // Calcular top 3
@@ -134,7 +153,6 @@ const HomePage = () => {
   const weaponTypeOptions = [...new Set(weaponConfigs.map(c => c.weaponType))];
   const rangeTypeOptions = ['Corto Alcance', 'Medio Alcance', 'Largo Alcance'];
   const videoSrc = isMobile ? '/img/mb_bg_01.mp4' : '/img/pc_bg_01.mp4';
-  const posterSrc = '/img/banner_01.jpg';
 
   const handleAddWeaponConfig = async (config: WeaponConfig) => {
     try {
@@ -195,26 +213,31 @@ const HomePage = () => {
       {/* Bienvenida */}
       <section id="welcome" className="welcome-section section-block text-center py-20 px-6">
         <div className="video-background">
-          <Image
-            src={posterSrc}
-            alt="Fondo Delta Force"
-            width={1600}
-            height={900}
-            className={`video-fallback ${videoLoaded ? 'is-hidden' : ''}`}
-            loading="lazy"
-          />
           <video
             key={videoSrc}
+            ref={videoRef}
             className={`video-media ${videoLoaded ? 'is-loaded' : ''}`}
             autoPlay
             loop
             muted
             playsInline
-            preload="none"
-            poster={posterSrc}
+            preload="auto"
+            controls={false}
             onLoadedData={() => setVideoLoaded(true)}
+            onCanPlay={() => setVideoLoaded(true)}
+            onError={() => {
+              setVideoLoaded(false);
+              try {
+                if (videoRef.current) {
+                  videoRef.current.src = '/img/mb_bg_01.mp4';
+                  videoRef.current.load();
+                  videoRef.current.play().catch(() => {});
+                }
+              } catch {}
+            }}
           >
-            <source src={videoSrc} type="video/mp4" />
+            {!isMobile && <source src="/img/pc_bg_01.mp4" type="video/mp4" />}
+            <source src="/img/mb_bg_01.mp4" type="video/mp4" />
           </video>
           <div className="video-overlay" />
         </div>
