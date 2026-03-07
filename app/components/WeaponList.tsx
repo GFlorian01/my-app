@@ -13,6 +13,18 @@ type WeaponConfig = {
   created_at?: string;
 };
 
+function getSafeRangeType(rangeType: any): string[] {
+  if (Array.isArray(rangeType)) return rangeType;
+  if (typeof rangeType === 'string') {
+    try {
+      return JSON.parse(rangeType);
+    } catch {
+      return [];
+    }
+  }
+  return [];
+}
+
 type WeaponListProps = {
   weaponConfigs: WeaponConfig[];
 };
@@ -43,7 +55,7 @@ const WeaponList = ({ weaponConfigs }: WeaponListProps) => {
   };
 
   // Selección de imagen según el tipo de alcance (usa el primero si hay múltiples)
-  const getWeaponImage = (rangeTypes: string[]) => {
+  const getWeaponImage = (rangeTypes: string[] = []) => {
     const primaryRange = rangeTypes[0] || 'Corto Alcance';
     if (primaryRange === 'Corto Alcance') return '/img/df-corto.jpg';
     if (primaryRange === 'Medio Alcance') return '/img/df-medio.jpg';
@@ -60,8 +72,8 @@ const WeaponList = ({ weaponConfigs }: WeaponListProps) => {
           {weaponConfigs.map((config, index) => (
             <div key={index} className="bg-gray-700 p-6 rounded-lg shadow-lg hover:shadow-xl transition duration-300">
               <Image
-                src={getWeaponImage(config.rangeType)}
-                alt={`${config.weaponName} - ${config.rangeType.join(', ')}`}
+                src={getWeaponImage(getSafeRangeType(config.rangeType))}
+                alt={`${config.weaponName} - ${getSafeRangeType(config.rangeType).join(', ')}`}
                 width={400}
                 height={180}
                 className="rounded mb-4 object-cover w-full h-44"
@@ -71,7 +83,7 @@ const WeaponList = ({ weaponConfigs }: WeaponListProps) => {
               <p className="mb-1"><strong className="text-gray-300">Nombre del Arma:</strong> {config.weaponName}</p>
               <p className="mb-1"><strong className="text-gray-300">Código del Arma:</strong> <span className="font-mono bg-gray-600 px-2 py-1 rounded">{config.weaponCode}</span></p>
               <p className="mb-1"><strong className="text-gray-300">Modo de Juego:</strong> {config.gameMode}</p>
-              <p className="mb-1"><strong className="text-gray-300">Tipo de Alcance:</strong> {config.rangeType.join(', ')}</p>
+              <p className="mb-1"><strong className="text-gray-300">Tipo de Alcance:</strong> {getSafeRangeType(config.rangeType).join(', ')}</p>
               <p className="mb-2 text-sm text-gray-400">Copiado {config.copy_count || 0} veces</p>
               <button
                 onClick={() => handleCopy(config.weaponCode, index, config.id!)}

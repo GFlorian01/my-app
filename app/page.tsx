@@ -20,6 +20,7 @@ type WeaponConfig = {
 const HomePage = () => {
   const [weaponConfigs, setWeaponConfigs] = useState<WeaponConfig[]>([]);
   const [loading, setLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState('');
 
   // Cargar configuraciones al montar
   useEffect(() => {
@@ -28,7 +29,17 @@ const HomePage = () => {
         const response = await fetch('/api/weaponConfigs');
         if (response.ok) {
           const data = await response.json();
-          setWeaponConfigs(data);
+          // Normalizar los datos para asegurar que todos los campos existen y los tipos son correctos
+          const normalized = data.map((item: any) => ({
+            ...item,
+            weaponType: item.weapon_type || item.weaponType || '',
+            weaponName: item.weapon_name || item.weaponName || '',
+            gameMode: item.game_mode || item.gameMode || '',
+            rangeType: Array.isArray(item.range_type) ? item.range_type : (typeof item.range_type === 'string' ? JSON.parse(item.range_type) : []),
+            weaponCode: item.weapon_code || item.weaponCode || '',
+            copy_count: item.copy_count || 0,
+          }));
+          setWeaponConfigs(normalized);
         }
       } catch (error) {
         console.error('Error cargando configuraciones:', error);
@@ -49,12 +60,27 @@ const HomePage = () => {
         body: JSON.stringify(config),
       });
       if (response.ok) {
-        setWeaponConfigs([...weaponConfigs, config]);
+        const data = await response.json();
+        // Normalizar el nuevo registro igual que en el fetch
+        const item = data.config;
+        const normalized = {
+          ...item,
+          weaponType: item.weapon_type || item.weaponType || '',
+          weaponName: item.weapon_name || item.weaponName || '',
+          gameMode: item.game_mode || item.gameMode || '',
+          rangeType: Array.isArray(item.range_type) ? item.range_type : (typeof item.range_type === 'string' ? JSON.parse(item.range_type) : []),
+          weaponCode: item.weapon_code || item.weaponCode || '',
+          copy_count: item.copy_count || 0,
+        };
+        setWeaponConfigs([...weaponConfigs, normalized]);
+        setErrorMessage('');
       } else {
-        console.error('Error guardando configuración');
+        const errorData = await response.json();
+        setErrorMessage(errorData.error);
       }
     } catch (error) {
       console.error('Error enviando configuración:', error);
+      setErrorMessage('Error de conexión al guardar la configuración');
     }
   };
 
@@ -104,6 +130,7 @@ const HomePage = () => {
       <section id="share" className="py-20 px-6 bg-gray-800">
         <div className="max-w-4xl mx-auto">
           <h3 className="text-3xl font-bold text-center mb-10">Comparte tu Configuración</h3>
+          {errorMessage && <p className="text-red-500 text-center mb-4">{errorMessage}</p>}
           <WeaponForm onSubmit={handleAddWeaponConfig} />
         </div>
       </section>

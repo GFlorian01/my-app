@@ -8,25 +8,45 @@ const WeaponForm = ({ onSubmit }: { onSubmit: (data: any) => void }) => {
   const [gameMode, setGameMode] = useState('Conflicto Bélico');
   const [rangeType, setRangeType] = useState<string[]>([]); // Array para múltiples selecciones
 
+  const weaponTypes = [
+    "Fusil de Asalto",
+    "Fuzil de combate",
+    "Subfusil",
+    "Pistola",
+    "Escopeta",
+    "Francotirador",
+    "Ametralladora Ligera",
+    // Agregar más según sea necesario
+  ];
+
   const parseWeaponCode = (code: string) => {
-    // Ejemplo: "Fusil de Asalto MCX LT-Operación: Extracción-6JAOB2K0DG7QNAIJM37DJ"
     const parts = code.split('-');
     if (parts.length >= 3) {
-      // Buscar el primer guion para separar tipo y nombre de arma
       const firstPart = parts[0].trim();
-      // Buscar el último espacio antes del guion para separar tipo y nombre
-      const lastSpaceIdx = firstPart.lastIndexOf(' ');
-      if (lastSpaceIdx !== -1) {
-        const weaponType = firstPart.substring(0, lastSpaceIdx).trim();
-        const weaponName = firstPart.substring(lastSpaceIdx + 1).trim();
-        setWeaponType(weaponType);
-        setWeaponName(weaponName);
+      let weaponType = '';
+      let weaponName = '';
+      for (const type of weaponTypes) {
+        if (firstPart.startsWith(type + ' ')) {
+          weaponType = type;
+          weaponName = firstPart.substring(type.length + 1).trim();
+          break;
+        }
       }
+      if (!weaponType) {
+        // Fallback: último espacio
+        const lastSpaceIdx = firstPart.lastIndexOf(' ');
+        if (lastSpaceIdx !== -1) {
+          weaponType = firstPart.substring(0, lastSpaceIdx).trim();
+          weaponName = firstPart.substring(lastSpaceIdx + 1).trim();
+        }
+      }
+      setWeaponType(weaponType);
+      setWeaponName(weaponName);
       const modePart = parts[1].trim();
       if (modePart.toLowerCase().includes('operación')) {
         setGameMode('Operaciones');
       } else {
-        setGameMode('Conflicto Bélico'); // Default
+        setGameMode('Conflicto Bélico');
       }
     }
   };
@@ -47,8 +67,31 @@ const WeaponForm = ({ onSubmit }: { onSubmit: (data: any) => void }) => {
     }
   };
 
+  const isValidWeaponCode = (code: string) => {
+    const parts = code.split('-');
+    if (parts.length < 3) return false;
+
+    const [weaponPart, modePart, ...rest] = parts.map(p => p.trim());
+    const codePart = rest.join('-'); // Por si el código tiene guiones internos
+
+    // Validar que la primera parte tenga tipo y nombre (al menos un espacio)
+    if (!weaponPart.includes(' ')) return false;
+
+    // Validar que el código sea alfanumérico mayúscula y tenga al menos 15 caracteres
+    if (codePart.length < 15 || !/^[A-Z0-9]+$/.test(codePart)) return false;
+
+    // Validar que el modo sea válido (no vacío)
+    if (!modePart) return false;
+
+    return true;
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isValidWeaponCode(weaponCode)) {
+      alert('El código del arma no es válido. Asegúrate de copiar el código completo de una build real (formato: Tipo Nombre-Modo-Código20Caracteres).');
+      return;
+    }
     onSubmit({ username, weaponCode, weaponType, weaponName, gameMode, rangeType });
     setUsername('');
     setWeaponCode('');

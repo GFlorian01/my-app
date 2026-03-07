@@ -24,19 +24,38 @@ export async function POST(request: NextRequest) {
   try {
     const newConfig = await request.json();
 
+    // Verificar si el código ya existe
+    const { data: existing, error: checkError } = await supabase
+      .from('weapon_configs')
+      .select('id')
+      .eq('weapon_code', newConfig.weaponCode);
+
+    if (checkError) {
+      console.error('Error checking for duplicates:', checkError);
+      return NextResponse.json({ error: 'Error verificando duplicados' }, { status: 500 });
+    }
+
+    if (existing && existing.length > 0) {
+      return NextResponse.json({ error: 'Esta build ya está guardada' }, { status: 400 });
+    }
+
     const { data, error } = await supabase
       .from('weapon_configs')
       .insert([{
-        ...newConfig,
-        range_type: newConfig.rangeType, // Mapear a snake_case
+        username: newConfig.username,
+        weapon_code: newConfig.weaponCode,
         weapon_type: newConfig.weaponType,
         weapon_name: newConfig.weaponName,
+        game_mode: newConfig.gameMode,
+        range_type: newConfig.rangeType,
         copy_count: 0
       }])
       .select();
 
     if (error) {
       console.error('Error inserting config:', error);
+      console.error('Error details:', error.details);
+      console.error('Error message:', error.message);
       return NextResponse.json({ error: 'Error guardando configuración' }, { status: 500 });
     }
 
