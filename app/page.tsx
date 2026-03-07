@@ -1,65 +1,132 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import React, { useState, useEffect } from 'react';
+import Image from 'next/image';
+import WeaponForm from './components/WeaponForm';
+import WeaponList from './components/WeaponList';
+
+type WeaponConfig = {
+  id?: number;
+  username: string;
+  weaponCode: string;
+  weaponType: string;
+  weaponName: string;
+  gameMode: string;
+  rangeType: string[]; // Cambiado a array para múltiples selecciones
+  copy_count?: number;
+  created_at?: string;
+};
+
+const HomePage = () => {
+  const [weaponConfigs, setWeaponConfigs] = useState<WeaponConfig[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Cargar configuraciones al montar
+  useEffect(() => {
+    const fetchConfigs = async () => {
+      try {
+        const response = await fetch('/api/weaponConfigs');
+        if (response.ok) {
+          const data = await response.json();
+          setWeaponConfigs(data);
+        }
+      } catch (error) {
+        console.error('Error cargando configuraciones:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchConfigs();
+  }, []);
+
+  const handleAddWeaponConfig = async (config: WeaponConfig) => {
+    try {
+      const response = await fetch('/api/weaponConfigs', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(config),
+      });
+      if (response.ok) {
+        setWeaponConfigs([...weaponConfigs, config]);
+      } else {
+        console.error('Error guardando configuración');
+      }
+    } catch (error) {
+      console.error('Error enviando configuración:', error);
+    }
+  };
+
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
+    <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-700 text-white">
+      {/* Header */}
+      <header className="flex items-center justify-between p-6 bg-black bg-opacity-50">
+        <div className="flex items-center space-x-4">
+          <Image
+            src="/img/delta-force-logo.png"
+            alt="Delta Force Logo"
+            width={180}
+            height={40}
+            className="rounded bg-transparent"
+            priority
+          />
+          <h1 className="text-2xl font-bold">Delta Force Community Hub</h1>
+        </div>
+        <nav>
+          <ul className="flex space-x-6">
+            <li><a href="#welcome" className="hover:text-yellow-400">Inicio</a></li>
+            <li><a href="#share" className="hover:text-yellow-400">Compartir</a></li>
+            <li><a href="#configs" className="hover:text-yellow-400">Configuraciones</a></li>
+          </ul>
+        </nav>
+      </header>
+
+      {/* Bienvenida */}
+      <section id="welcome" className="text-center py-20 px-6">
+        <h2 className="text-4xl font-bold mb-4">¡Bienvenido a la Comunidad de Delta Force!</h2>
+        <p className="text-xl mb-8 max-w-2xl mx-auto">
+          Comparte tus configuraciones de armas personalizadas, descubre builds de otros jugadores y mejora tu experiencia en el juego.
+          Tanto para Conflicto Bélico como para Operaciones, encuentra códigos para armas de corto, medio y largo alcance.
+        </p>
         <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
+          src="/img/banner_01.jpg"
+          alt="Banner Delta Force"
+          width={800}
+          height={400}
+          className="mx-auto rounded-lg shadow-lg"
           priority
         />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+      </section>
+
+      {/* Sección Compartir */}
+      <section id="share" className="py-20 px-6 bg-gray-800">
+        <div className="max-w-4xl mx-auto">
+          <h3 className="text-3xl font-bold text-center mb-10">Comparte tu Configuración</h3>
+          <WeaponForm onSubmit={handleAddWeaponConfig} />
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+      </section>
+
+      {/* Sección Configuraciones */}
+      <section id="configs" className="py-20 px-6">
+        <div className="max-w-4xl mx-auto">
+          <h3 className="text-3xl font-bold text-center mb-10">Configuraciones Compartidas</h3>
+          {loading ? (
+            <p className="text-center text-gray-400">Cargando configuraciones...</p>
+          ) : (
+            <WeaponList weaponConfigs={weaponConfigs} />
+          )}
         </div>
-      </main>
+      </section>
+
+      {/* Footer */}
+      <footer className="bg-black bg-opacity-50 py-6 text-center">
+        <p>&copy; 2026 Delta Force Community. Todos los derechos reservados.</p>
+        <p>Recuerda: Juega responsablemente y respeta a la comunidad.</p>
+      </footer>
     </div>
   );
-}
+};
+
+export default HomePage;
