@@ -8,6 +8,76 @@ const CANONICAL_WEAPON_TYPES = [
   { key: 'ametralladora ligera', label: 'Ametralladora Ligera' },
 ];
 
+const ARMS_FILES = [
+  'AG_M250.png',
+  'AG_PKM.png',
+  'AL_M249.png',
+  'AL_QJB-201.png',
+  'Arco.png',
+  'Esc_725.png',
+  'Esc_FS-12.png',
+  'Esc_M1014.png',
+  'Esc_M870.png',
+  'Esc_S12k.png',
+  'FAC_SR-3M.png',
+  'FA_AK-12.png',
+  'FA_AKM.png',
+  'FA_AKS-74.png',
+  'FA_ASVal.png',
+  'FA_ASh-12.png',
+  'FA_AUG.png',
+  'FA_CAR-15.png',
+  'FA_CI-19.png',
+  'FA_G3.png',
+  'FA_K416.png',
+  'FA_K437.png',
+  'FA_KC17.png',
+  'FA_M16A4.png',
+  'FA_M4A1.png',
+  'FA_M7.png',
+  'FA_MK47.png',
+  'FA_MXC_LT.png',
+  'FA_PTR-32.png',
+  'FA_QBZ-95-1.png',
+  'FA_SCAR-H.png',
+  'FA_SG_552.png',
+  'FF_AWM.png',
+  'FF_M700.png',
+  'FF_R93.png',
+  'FF_SV-98.png',
+  'FT_M14.png',
+  'FT_Mini-14.png',
+  'FT_PSG-1.png',
+  'FT_SKS.png',
+  'FT_SR-25.png',
+  'FT_SR9.png',
+  'FT_SVD.png',
+  'FT_VSS.png',
+  'FuP.png',
+  'P_93R.png',
+  'P_Desert_Eagle.png',
+  'P_G17.png',
+  'P_G18.png',
+  'P_M1911.png',
+  'P_QSZ-92G.png',
+  'R_.357.png',
+  'Sub_Bizon.png',
+  'Sub_MK4.png',
+  'Sub_MP5.png',
+  'Sub_MP7.png',
+  'Sub_P90.png',
+  'Sub_QCQ171.png',
+  'Sub_SMG-45.png',
+  'Sub_UZI.png',
+  'Sub_Vector.png',
+  'Sub_Vityaz.png',
+];
+
+const ARMS_FILE_MAP = ARMS_FILES.reduce((acc, file) => {
+  acc[file.toLowerCase()] = file;
+  return acc;
+}, {});
+
 const PISTOL_ONLY_NAMES = ['g18', 'desert eagle', 'revólver .357', 'revolver .357'];
 
 const normalizeKey = (value) =>
@@ -35,6 +105,143 @@ export const normalizeWeaponType = (weaponType) => {
   const normalized = normalizeKey(weaponType);
   if (normalized === 'fusil de asalto') return 'fusil de asalto';
   return weaponType.trim();
+};
+
+export const normalizeWeaponDisplayName = (weaponName, weaponType = '') => {
+  const rawName = (weaponName || '').trim();
+  if (!rawName) return '';
+  const normalizedName = normalizeKey(rawName);
+  const normalizedType = normalizeKey(weaponType || '');
+
+  let cleaned = rawName;
+  if (normalizedType && normalizedName.startsWith(`${normalizedType} `)) {
+    cleaned = rawName.slice(weaponType.length + 1).trim();
+  }
+
+  if (normalizeKey(cleaned).startsWith('compacto ')) {
+    cleaned = cleaned.replace(/^compacto\s+/i, '').trim();
+  }
+
+  const normalizedClean = normalizeKey(cleaned);
+  const overrides = {
+    'mxc lt': 'MCX LT',
+    'mcx lt': 'MCX LT',
+    'sr-3m': 'SR-3M',
+    'sr 3m': 'SR-3M',
+    'm7': 'M7',
+    'ash-12': 'ASh-12',
+    'ash 12': 'ASh-12',
+  };
+
+  return overrides[normalizedClean] || cleaned;
+};
+
+const normalizeImageToken = (value) => {
+  const normalized = normalizeKey(value)
+    .replace(/\s+/g, '_')
+    .replace(/[^a-z0-9._-]/g, '_')
+    .replace(/_+/g, '_')
+    .replace(/^_+|_+$/g, '');
+  return normalized;
+};
+
+const typePrefixMap = {
+  'fusil de asalto': 'FA',
+  'fuzil de combate': 'FAC',
+  'subfusil': 'Sub',
+  'subametralladora': 'Sub',
+  'pistola': 'P',
+  'escopeta': 'Esc',
+  'francotirador': 'FF',
+  'fusil de francotirador': 'FF',
+  'fusil de tirador': 'FT',
+  'ametralladora ligera': 'AL',
+  'ametralladora general': 'AG',
+  'arco': 'Arco',
+  'revolver': 'R',
+  'revólver': 'R',
+};
+
+const resolveWeaponPrefix = (weaponType) => {
+  const normalized = normalizeKey(weaponType);
+  return typePrefixMap[normalized] || '';
+};
+
+const buildNameVariants = (rawName) => {
+  const token = normalizeImageToken(rawName);
+  const noSeparators = token.replace(/[_-]/g, '');
+  const withUnderscore = token.replace(/-/g, '_');
+  const withDash = token.replace(/_/g, '-');
+  const variants = [token, withUnderscore, withDash, noSeparators];
+  return Array.from(new Set(variants.filter(Boolean)));
+};
+
+export const getWeaponImagePath = (weaponType, weaponName) => {
+  const normalizedType = normalizeWeaponType(weaponType || '');
+  const typeToken = normalizeImageToken(normalizedType);
+  const prefix = resolveWeaponPrefix(normalizedType);
+  const nameVariants = buildNameVariants(weaponName || '');
+  const extensions = ['png', 'jpg', 'jpeg'];
+
+  const nameKey = normalizeKey(weaponName || '');
+  const directOverrides = {
+    'mcx lt': 'FA_MCX_LT.png',
+    'ash-12': 'FA_ASh-12.png',
+    'sr-3m': 'FAC_SR-3M.png',
+    'm7': 'FA_M7.png',
+  };
+  if (directOverrides[nameKey]) {
+    const file = directOverrides[nameKey];
+    const matched = ARMS_FILE_MAP[file.toLowerCase()];
+    if (matched) {
+      const path = `/arms/${matched}`;
+      console.debug('Weapon image direct override', { weaponType, weaponName, path });
+      return path;
+    }
+  }
+  if (nameKey === 'compuesto' && normalizeKey(weaponType) === 'arco') {
+    const file = 'Arco.png';
+    const matched = ARMS_FILE_MAP[file.toLowerCase()];
+    if (matched) {
+      const path = `/arms/${matched}`;
+      console.debug('Weapon image arco compuesto override', { weaponType, weaponName, path });
+      return path;
+    }
+  }
+
+  const candidates = [];
+  for (const nameVariant of nameVariants) {
+    if (typeToken) {
+      for (const ext of extensions) {
+        candidates.push(`${typeToken}_${nameVariant}.${ext}`);
+      }
+    }
+    if (prefix) {
+      for (const ext of extensions) {
+        candidates.push(`${prefix}_${nameVariant}.${ext}`);
+      }
+    }
+  }
+
+  for (const candidate of candidates) {
+    const matched = ARMS_FILE_MAP[candidate.toLowerCase()];
+    if (matched) {
+      const path = `/arms/${matched}`;
+      console.debug('Weapon image matched', {
+        weaponType,
+        weaponName,
+        candidate,
+        path,
+      });
+      return path;
+    }
+  }
+
+  console.warn('Weapon image not found', {
+    weaponType,
+    weaponName,
+  });
+  return '/img/asalto_01.jpg';
 };
 
 const extractParts = (code) => {
@@ -100,6 +307,7 @@ export const parseWeaponCode = (code) => {
   const { weaponPart, modePart, codePart } = parts;
   const { weaponType, weaponName } = detectWeaponTypeAndName(weaponPart);
   const normalizedWeaponType = normalizeWeaponType(weaponType);
+  const normalizedWeaponName = normalizeWeaponDisplayName(weaponName, normalizedWeaponType);
   const gameMode = normalizeGameMode(modePart);
   const isValid =
     Boolean(weaponName) &&
@@ -120,7 +328,7 @@ export const parseWeaponCode = (code) => {
 
   return {
     weaponType: normalizedWeaponType,
-    weaponName,
+    weaponName: normalizedWeaponName,
     gameMode,
     codePart,
     isValid,
