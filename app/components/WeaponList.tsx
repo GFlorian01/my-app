@@ -1,6 +1,9 @@
 import React, { useRef, useState } from 'react';
 import Image from 'next/image';
 import { getWeaponImagePath, normalizeWeaponDisplayName } from '../lib/weaponParsing';
+import { Card, CardContent } from './ui/card';
+import Badge from './ui/badge';
+import Button from './ui/button';
 
 type WeaponConfig = {
   id?: number;
@@ -78,28 +81,62 @@ const WeaponList = ({ weaponConfigs, onCopyCountUpdate }: WeaponListProps) => {
           {weaponConfigs.map((config, index) => {
             const displayName = normalizeWeaponDisplayName(config.weaponName, config.weaponType);
             return (
-            <div key={index} className="bg-gray-700 p-6 rounded-lg shadow-lg hover:shadow-xl transition duration-300">
-              <Image
-                src={getWeaponImagePath(config.weaponType, config.weaponName)}
-                alt={`${config.weaponType} ${displayName}`}
-                width={400}
-                height={180}
-                className="rounded mb-4 object-contain w-full h-36 bg-gray-800"
-              />
-              <h3 className="text-xl font-bold mb-2 text-yellow-400">{config.username}</h3>
-              <p className="mb-1"><strong className="text-gray-300">Tipo de Arma:</strong> {config.weaponType}</p>
-              <p className="mb-1"><strong className="text-gray-300">Nombre del Arma:</strong> {displayName}</p>
-              <p className="mb-1"><strong className="text-gray-300">Código del Arma:</strong> <span className="font-mono bg-gray-600 px-2 py-1 rounded">{config.weaponCode}</span></p>
-              <p className="mb-1"><strong className="text-gray-300">Modo de Juego:</strong> {config.gameMode}</p>
-              <p className="mb-1"><strong className="text-gray-300">Tipo de Alcance:</strong> {getSafeRangeType(config.rangeType).join(', ')}</p>
-              <p className="mb-2 text-sm text-gray-400">Copiado {config.copy_count || 0} veces</p>
-              <button
-                onClick={() => handleCopy(config.weaponCode, index, config.id!)}
-                className="tap-button bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded transition duration-300"
-              >
-                {copiedIndex === index ? '¡Copiado!' : 'Copiar Código'}
-              </button>
-            </div>
+            <Card key={index} className="hover:shadow-xl transition">
+              <CardContent className="p-0">
+                <div className="p-6">
+                  <div className="relative mb-4">
+                    <Image
+                      src={getWeaponImagePath(config.weaponType, config.weaponName)}
+                      alt={`${config.weaponType} ${displayName}`}
+                      width={400}
+                      height={180}
+                      className="rounded object-contain w-full h-36 bg-gray-900"
+                    />
+                    <div className="pointer-events-none absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-black/70 to-transparent rounded-b" />
+                    <div className="absolute inset-x-0 bottom-0 p-2">
+                      <h3 className="text-sm font-semibold truncate">{displayName}</h3>
+                    </div>
+                  </div>
+                  <div className="flex gap-2 mb-2">
+                    <Badge
+                      variant="secondary"
+                      className="whitespace-pre-line leading-tight text-center"
+                    >
+                      {(() => {
+                        const raw = config.weaponType || '';
+                        const key = raw.toLowerCase().replace(/\s+/g, '');
+                        if (key === 'subametralladora' || raw.toLowerCase().includes('sub ametralladora')) {
+                          return 'Sub\nAmetralladora';
+                        }
+                        return raw;
+                      })()}
+                    </Badge>
+                    <Badge>{config.gameMode}</Badge>
+                  </div>
+                  <p className="text-sm text-gray-300 mb-2">Por {config.username}</p>
+                  <div className="mb-2">
+                    <span className="text-xs text-gray-400">Alcance:</span>{' '}
+                    <span className="text-sm">{getSafeRangeType(config.rangeType).join(', ')}</span>
+                  </div>
+                  <div className="mb-4">
+                    <span className="text-xs text-gray-400">Código:</span>{' '}
+                    <span className="font-mono bg-gray-700 px-2 py-1 rounded text-sm break-all whitespace-normal inline-block max-w-full">
+                      {config.weaponCode}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="text-xs text-gray-400">Copiado {config.copy_count || 0} veces</p>
+                    <Button
+                      onClick={() => handleCopy(config.weaponCode, index, config.id!)}
+                      size="lg"
+                      className="w-full"
+                    >
+                      {copiedIndex === index ? '¡Copiado!' : 'Copiar Código'}
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           )})}
         </div>
       )}

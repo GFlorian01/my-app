@@ -1,11 +1,29 @@
 const CANONICAL_WEAPON_TYPES = [
   { key: 'fusil de asalto', label: 'fusil de asalto' },
-  { key: 'fuzil de combate', label: 'Fuzil de combate' },
-  { key: 'subfusil', label: 'Subfusil' },
+  { key: 'fuzil de combate', label: 'fusil de asalto' },
+  { key: 'fusil de batalla', label: 'fusil de asalto' },
+  { key: 'subfusil', label: 'Sub Ametralladora' },
   { key: 'pistola', label: 'Pistola' },
   { key: 'escopeta', label: 'Escopeta' },
   { key: 'francotirador', label: 'Francotirador' },
   { key: 'ametralladora ligera', label: 'Ametralladora Ligera' },
+  // Keys en inglés mapeadas a etiquetas canónicas en español
+  { key: 'assault rifle', label: 'fusil de asalto' },
+  { key: 'battle rifle', label: 'fusil de asalto' },
+  { key: 'submachine gun', label: 'Sub Ametralladora' },
+  { key: 'smg', label: 'Sub Ametralladora' },
+  { key: 'pistol', label: 'Pistola' },
+  { key: 'shotgun', label: 'Escopeta' },
+  { key: 'sniper rifle', label: 'Francotirador' },
+  { key: 'sniper', label: 'Francotirador' },
+  { key: 'marksman rifle', label: 'Fusil de tirador' },
+  { key: 'dmr', label: 'Fusil de tirador' },
+  { key: 'light machine gun', label: 'Ametralladora Ligera' },
+  { key: 'lmg', label: 'Ametralladora Ligera' },
+  { key: 'general purpose machine gun', label: 'Ametralladora general' },
+  { key: 'general-purpose machine gun', label: 'Ametralladora general' },
+  { key: 'gpmg', label: 'Ametralladora general' },
+  { key: 'bow', label: 'Arco' },
 ];
 
 const ARMS_FILES = [
@@ -36,7 +54,7 @@ const ARMS_FILES = [
   'FA_M4A1.png',
   'FA_M7.png',
   'FA_MK47.png',
-  'FA_MXC_LT.png',
+  'FA_MCX_LT.png',
   'FA_PTR-32.png',
   'FA_QBZ-95-1.png',
   'FA_SCAR-H.png',
@@ -78,6 +96,8 @@ const ARMS_FILE_MAP = ARMS_FILES.reduce((acc, file) => {
   return acc;
 }, {});
 
+export const __listArmsFiles = () => Object.values(ARMS_FILE_MAP);
+
 const PISTOL_ONLY_NAMES = ['g18', 'desert eagle', 'revólver .357', 'revolver .357'];
 
 const normalizeKey = (value) =>
@@ -89,21 +109,59 @@ const normalizeKey = (value) =>
 
 const normalizeGameMode = (modePart) => {
   const normalized = normalizeKey(modePart);
-  if (normalized.includes('operacion')) {
-    if (normalized.includes('extraccion')) {
-      return 'Operación: Extracción';
-    }
+  // Unificación: todo mapea a "Operaciones"
+  const opsTokens = [
+    'operations',
+    'operation',
+    'operaciones',
+    'operacion',
+    'operación',
+    'extraccion',
+    'extracción',
+    'extraction',
+    'conflicto',
+    'warfare',
+  ];
+  if (opsTokens.some(t => normalized.includes(t))) {
     return 'Operaciones';
   }
-  if (normalized.includes('conflicto')) {
-    return 'Conflicto Bélico';
-  }
-  return modePart.trim();
+  return 'Operaciones';
 };
 
 export const normalizeWeaponType = (weaponType) => {
   const normalized = normalizeKey(weaponType);
-  if (normalized === 'fusil de asalto') return 'fusil de asalto';
+  const typeMap = {
+    'fusil de asalto': 'fusil de asalto',
+    'assault rifle': 'fusil de asalto',
+    'battle rifle': 'fusil de asalto',
+    'fuzil de combate': 'fusil de asalto',
+    'fusil de batalla': 'fusil de asalto',
+    'submachine gun': 'Sub Ametralladora',
+    'smg': 'Sub Ametralladora',
+    'subfusil': 'Sub Ametralladora',
+    'subametralladora': 'Sub Ametralladora',
+    'sub ametralladora': 'Sub Ametralladora',
+    'pistol': 'Pistola',
+    'pistola': 'Pistola',
+    'shotgun': 'Escopeta',
+    'escopeta': 'Escopeta',
+    'sniper rifle': 'Francotirador',
+    'sniper': 'Francotirador',
+    'francotirador': 'Francotirador',
+    'marksman rifle': 'Fusil de tirador',
+    'dmr': 'Fusil de tirador',
+    'fusil de tirador': 'Fusil de tirador',
+    'light machine gun': 'Ametralladora Ligera',
+    'lmg': 'Ametralladora Ligera',
+    'ametralladora ligera': 'Ametralladora Ligera',
+    'general purpose machine gun': 'Ametralladora general',
+    'general-purpose machine gun': 'Ametralladora general',
+    'gpmg': 'Ametralladora general',
+    'ametralladora general': 'Ametralladora general',
+    'bow': 'Arco',
+    'arco': 'Arco',
+  };
+  if (typeMap[normalized]) return typeMap[normalized];
   return weaponType.trim();
 };
 
@@ -147,9 +205,50 @@ const normalizeImageToken = (value) => {
 
 const typePrefixMap = {
   'fusil de asalto': 'FA',
-  'fuzil de combate': 'FAC',
+  'fusil de combate': 'FAC',
   'subfusil': 'Sub',
   'subametralladora': 'Sub',
+  'sub ametralladora': 'Sub',
+  'sub ametralladora': 'Sub',
+  'sub ametralladora': 'Sub',
+  'sub ametralladora': 'Sub',
+  'sub ametralladora': 'Sub',
+  'sub ametralladora': 'Sub',
+  'sub ametralladora': 'Sub',
+  'sub ametralladora': 'Sub',
+  'sub ametralladora': 'Sub',
+  'sub ametralladora': 'Sub',
+  'sub ametralladora': 'Sub',
+  'sub ametralladora': 'Sub',
+  'sub ametralladora': 'Sub',
+  'sub ametralladora': 'Sub',
+  'sub ametralladora': 'Sub',
+  'sub ametralladora': 'Sub',
+  'sub ametralladora': 'Sub',
+  'sub ametralladora': 'Sub',
+  'sub ametralladora': 'Sub',
+  'sub ametralladora': 'Sub',
+  'sub ametralladora': 'Sub',
+  'sub ametralladora': 'Sub',
+  'sub ametralladora': 'Sub',
+  'sub ametralladora': 'Sub',
+  'sub ametralladora': 'Sub',
+  'sub ametralladora': 'Sub',
+  'sub ametralladora': 'Sub',
+  'sub ametralladora': 'Sub',
+  'sub ametralladora': 'Sub',
+  'sub ametralladora': 'Sub',
+  'sub ametralladora': 'Sub',
+  'sub ametralladora': 'Sub',
+  'sub ametralladora': 'Sub',
+  'sub ametralladora': 'Sub',
+  'sub ametralladora': 'Sub',
+  'sub ametralladora': 'Sub',
+  'sub ametralladora': 'Sub',
+  'sub ametralladora': 'Sub',
+  'sub ametralladora': 'Sub',
+  'sub ametralladora': 'Sub',
+  'sub ametralladora': 'Sub',
   'pistola': 'P',
   'escopeta': 'Esc',
   'francotirador': 'FF',
@@ -185,9 +284,11 @@ export const getWeaponImagePath = (weaponType, weaponName) => {
 
   const nameKey = normalizeKey(weaponName || '');
   const directOverrides = {
+    'mxc lt': 'FA_MCX_LT.png',
     'mcx lt': 'FA_MCX_LT.png',
     'ash-12': 'FA_ASh-12.png',
     'sr-3m': 'FAC_SR-3M.png',
+    'sr3m': 'FAC_SR-3M.png',
     'm7': 'FA_M7.png',
   };
   if (directOverrides[nameKey]) {
@@ -258,10 +359,20 @@ const extractParts = (code) => {
 const detectWeaponTypeAndName = (weaponPart) => {
   const normalized = normalizeKey(weaponPart);
   for (const { key, label } of CANONICAL_WEAPON_TYPES) {
+    // Caso ES: "<tipo> <nombre>"
     if (normalized.startsWith(`${key} `)) {
       return {
         weaponType: label,
         weaponName: weaponPart.slice(key.length + 1).trim(),
+      };
+    }
+    // Caso EN: "<nombre> <tipo>"
+    if (normalized.endsWith(` ${key}`)) {
+      const base = weaponPart.slice(0, weaponPart.length - key.length).trim();
+      // Si el nombre quedó con espacios extra, simplemente usamos 'base'
+      return {
+        weaponType: label,
+        weaponName: base,
       };
     }
   }
@@ -306,8 +417,12 @@ export const parseWeaponCode = (code) => {
 
   const { weaponPart, modePart, codePart } = parts;
   const { weaponType, weaponName } = detectWeaponTypeAndName(weaponPart);
-  const normalizedWeaponType = normalizeWeaponType(weaponType);
+  let normalizedWeaponType = normalizeWeaponType(weaponType);
   const normalizedWeaponName = normalizeWeaponDisplayName(weaponName, normalizedWeaponType);
+  // Regla especial: SR-3M se clasifica como Sub Ametralladora
+  if (normalizeKey(normalizedWeaponName) === 'sr-3m') {
+    normalizedWeaponType = 'Sub Ametralladora';
+  }
   const gameMode = normalizeGameMode(modePart);
   const isValid =
     Boolean(weaponName) &&

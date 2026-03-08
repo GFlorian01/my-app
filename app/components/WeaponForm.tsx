@@ -1,5 +1,10 @@
 import React, { useState } from 'react';
 import { parseWeaponCode } from '../lib/weaponParsing';
+import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
+import Input from './ui/input';
+import Select from './ui/select';
+import Checkbox from './ui/checkbox';
+import Button from './ui/button';
 
 type WeaponFormData = {
   username: string;
@@ -15,7 +20,7 @@ const WeaponForm = ({ onSubmit }: { onSubmit: (data: WeaponFormData) => void }) 
   const [weaponCode, setWeaponCode] = useState('');
   const [weaponType, setWeaponType] = useState('');
   const [weaponName, setWeaponName] = useState('');
-  const [gameMode, setGameMode] = useState('Conflicto Bélico');
+  const [gameMode, setGameMode] = useState('Operaciones');
   const [rangeType, setRangeType] = useState<string[]>([]); // Array para múltiples selecciones
 
   const applyParsedWeapon = (code: string) => {
@@ -63,84 +68,67 @@ const WeaponForm = ({ onSubmit }: { onSubmit: (data: WeaponFormData) => void }) 
   };
 
   return (
-    <form onSubmit={handleSubmit} className="bg-gray-700 p-8 rounded-lg shadow-lg max-w-md mx-auto">
-      <h4 className="text-2xl font-bold mb-6 text-center text-yellow-400">Nueva Configuración</h4>
-      <div className="mb-4">
-        <label htmlFor="username" className="block text-sm font-medium mb-2">Nombre de Usuario:</label>
-        <input
-          type="text"
-          id="username"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          required
-          className="w-full p-3 bg-gray-600 border border-gray-500 rounded focus:outline-none focus:ring-2 focus:ring-yellow-400"
-        />
-      </div>
-      <div className="mb-4">
-        <label htmlFor="weaponCode" className="block text-sm font-medium mb-2">Código del Arma:</label>
-        <input
-          type="text"
-          id="weaponCode"
-          value={weaponCode}
-          onChange={handleWeaponCodeChange}
-          required
-          className="w-full p-3 bg-gray-600 border border-gray-500 rounded focus:outline-none focus:ring-2 focus:ring-yellow-400"
-          placeholder="Ej: Fusil de Asalto MCX LT-Operación: Extracción-6JAOB2K0DG7QNAIJM37DJ"
-        />
-      </div>
-      <div className="mb-4">
-        <label htmlFor="weaponType" className="block text-sm font-medium mb-2">Tipo de Arma (autorellenado):</label>
-        <input
-          type="text"
-          id="weaponType"
-          value={weaponType}
-          readOnly
-          className="w-full p-3 bg-gray-500 border border-gray-400 rounded cursor-not-allowed"
-        />
-      </div>
-      <div className="mb-4">
-        <label htmlFor="weaponName" className="block text-sm font-medium mb-2">Nombre del Arma (autorellenado):</label>
-        <input
-          type="text"
-          id="weaponName"
-          value={weaponName}
-          readOnly
-          className="w-full p-3 bg-gray-500 border border-gray-400 rounded cursor-not-allowed"
-        />
-      </div>
-      <div className="mb-4">
-        <label htmlFor="gameMode" className="block text-sm font-medium mb-2">Modo de Juego (autorellenado):</label>
-        <select
-          id="gameMode"
-          value={gameMode}
-          disabled
-          className="w-full p-3 bg-gray-500 border border-gray-400 rounded cursor-not-allowed"
-        >
-          <option value="Conflicto Bélico">Conflicto Bélico</option>
-          <option value="Operaciones">Operaciones</option>
-          <option value="Operación: Extracción">Operación: Extracción</option>
-        </select>
-      </div>
-      <div className="mb-4">
-        <label className="block text-sm font-medium mb-2">Tipo de Alcance (selección múltiple):</label>
-        <div className="space-y-2">
-          {['Corto Alcance', 'Medio Alcance', 'Largo Alcance'].map(range => (
-            <label key={range} className="flex items-center">
-              <input
-                type="checkbox"
-                checked={rangeType.includes(range)}
-                onChange={(e) => handleRangeChange(range, e.target.checked)}
-                className="mr-2"
-              />
-              {range}
-            </label>
-          ))}
-        </div>
-      </div>
-      <button type="submit" className="tap-button w-full bg-yellow-500 hover:bg-yellow-600 text-black font-bold py-3 px-4 rounded transition duration-300">
-        Compartir Configuración
-      </button>
-    </form>
+    <Card className="max-w-xl mx-auto">
+      <CardHeader>
+        <CardTitle className="text-center text-yellow-400">Nueva Configuración</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label htmlFor="username" className="block text-sm font-medium mb-2">Nombre de Usuario</label>
+            <Input
+              id="username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              required
+              placeholder="Tu nombre o alias"
+            />
+          </div>
+          <div>
+            <label htmlFor="weaponCode" className="block text-sm font-medium mb-2">Código del Arma</label>
+            <Input
+              id="weaponCode"
+              value={weaponCode}
+              onChange={handleWeaponCodeChange}
+              required
+              placeholder="Fusil de Asalto MCX LT-Operación: Extracción-6JAO..."
+            />
+            <p className="mt-1 text-xs text-gray-400">Pega el código completo generado por el juego</p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div>
+              <label htmlFor="weaponType" className="block text-sm font-medium mb-2">Tipo</label>
+              <Input id="weaponType" value={weaponType} readOnly className="cursor-not-allowed bg-gray-700/70" />
+            </div>
+            <div>
+              <label htmlFor="weaponName" className="block text-sm font-medium mb-2">Arma</label>
+              <Input id="weaponName" value={weaponName} readOnly className="cursor-not-allowed bg-gray-700/70" />
+            </div>
+            <div>
+              <label htmlFor="gameMode" className="block text-sm font-medium mb-2">Modo</label>
+              <Select id="gameMode" value={gameMode} disabled>
+                <option value="Operaciones">Operaciones</option>
+              </Select>
+            </div>
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-2">Tipo de Alcance</label>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              {['Corto Alcance', 'Medio Alcance', 'Largo Alcance'].map(range => (
+                <label key={range} className="flex items-center gap-2 text-sm">
+                  <Checkbox
+                    checked={rangeType.includes(range)}
+                    onChange={(e) => handleRangeChange(range, (e.target as HTMLInputElement).checked)}
+                  />
+                  {range}
+                </label>
+              ))}
+            </div>
+          </div>
+          <Button type="submit" size="lg" className="w-full">Compartir Configuración</Button>
+        </form>
+      </CardContent>
+    </Card>
   );
 };
 

@@ -5,6 +5,8 @@ import Image from 'next/image';
 import WeaponForm from './components/WeaponForm';
 import WeaponList from './components/WeaponList';
 import { normalizeWeaponType } from './lib/weaponParsing';
+import Select from './components/ui/select';
+import Button from './components/ui/button';
 
 type WeaponConfig = {
   id?: number;
@@ -188,9 +190,9 @@ const HomePage = () => {
   };
 
   return (
-    <div className="app-container min-h-screen bg-gradient-to-b from-gray-900 to-gray-700 text-white">
+    <div className="app-container min-h-screen bg-gradient-to-b from-gray-950 via-gray-900 to-gray-800 text-white">
       {/* Header */}
-      <header className="site-header flex items-center justify-between p-6 bg-black bg-opacity-50">
+      <header className="site-header sticky top-0 z-40 flex items-center justify-between p-4 bg-black/40 backdrop-blur border-b border-white/10">
         <div className="site-logo flex items-center space-x-4">
           <Image
             src="/img/logo_01.png"
@@ -200,19 +202,19 @@ const HomePage = () => {
             className="rounded bg-transparent"
             priority
           />
-          <h1 className="site-title text-2xl font-bold">Delta Force Community Hub</h1>
+          <h1 className="site-title text-2xl font-bold tracking-tight">Delta Force Community Hub</h1>
         </div>
         <nav className="site-nav">
-          <ul className="flex space-x-6">
-            <li><a href="#welcome" className="hover:text-yellow-400">Inicio</a></li>
-            <li><a href="#share" className="hover:text-yellow-400">Compartir</a></li>
-            <li><a href="#configs" className="hover:text-yellow-400">Configuraciones</a></li>
+          <ul className="flex gap-4">
+            <li><a href="#welcome" className="px-3 py-2 rounded hover:bg-white/10">Inicio</a></li>
+            <li><a href="#share" className="px-3 py-2 rounded hover:bg-white/10">Compartir</a></li>
+            <li><a href="#configs" className="px-3 py-2 rounded hover:bg-white/10">Configuraciones</a></li>
           </ul>
         </nav>
       </header>
 
       {/* Bienvenida */}
-      <section id="welcome" className="welcome-section section-block text-center py-20 px-6">
+      <section id="welcome" className="welcome-section section-block text-center py-24 px-6">
         <div className="video-background">
           <video
             key={videoSrc}
@@ -243,8 +245,8 @@ const HomePage = () => {
           <div className="video-overlay" />
         </div>
         <div className="welcome-content">
-          <h2 className="welcome-title text-4xl font-bold mb-4">¡Bienvenido a la Comunidad de Delta Force!</h2>
-          <p className="welcome-text text-xl mb-8 max-w-2xl mx-auto">
+          <h2 className="welcome-title text-4xl md:text-5xl font-bold mb-4">¡Bienvenido a la Comunidad de Delta Force!</h2>
+          <p className="welcome-text text-lg md:text-xl mb-8 max-w-2xl mx-auto">
             Comparte tus configuraciones de armas personalizadas, descubre builds de otros jugadores y mejora tu experiencia en el juego.
             Tanto para Conflicto Bélico como para Operaciones, encuentra códigos para armas de corto, medio y largo alcance.
           </p>
@@ -253,12 +255,12 @@ const HomePage = () => {
 
       {/* Top 3 Armas Más Copiadas */}
       {top3.length > 0 && (
-        <section className="section-block py-10 px-6 bg-gray-800">
+        <section className="section-block py-12 px-6 bg-gray-900">
           <div className="max-w-4xl mx-auto">
             <h2 className="section-title text-3xl font-bold text-center mb-8 text-yellow-400">Top 3 Armas Más Copiadas</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {top3.map((config, index) => (
-                <div key={config.id} className="bg-gray-700 p-6 rounded-lg shadow-lg text-center">
+                <div key={config.id} className="bg-gray-800 p-6 rounded-lg shadow text-center border border-gray-700">
                   <div className="text-4xl font-bold text-yellow-400 mb-2">#{index + 1}</div>
                   <h3 className="text-xl font-bold mb-2">{config.weaponName}</h3>
                   <p className="mb-1"><strong>Tipo:</strong> {config.weaponType}</p>
@@ -272,7 +274,7 @@ const HomePage = () => {
       )}
 
       {/* Sección Compartir */}
-      <section id="share" className="section-block py-20 px-6 bg-gray-800">
+      <section id="share" className="section-block py-20 px-6 bg-gray-900">
         <div className="max-w-4xl mx-auto">
           <h3 className="section-title text-3xl font-bold text-center mb-10">Comparte tu Configuración</h3>
           {errorMessage && <p className="text-red-500 text-center mb-4">{errorMessage}</p>}
@@ -286,46 +288,44 @@ const HomePage = () => {
           <h3 className="section-title text-3xl font-bold text-center mb-10">Configuraciones Compartidas</h3>
           
           {/* Filtros */}
-          <div className="filter-bar mb-8 flex flex-wrap justify-center gap-4">
+          <div className="filter-bar mb-8 flex flex-wrap items-end justify-center gap-4">
             <div>
-              <label className="block text-sm font-medium mb-2">Modo de Juego:</label>
-              <select
-                value={gameModeFilter}
-                onChange={(e) => setGameModeFilter(e.target.value)}
-                className="filter-select p-2 bg-gray-700 border border-gray-500 rounded"
-              >
+              <label className="block text-sm font-medium mb-2">Modo de Juego</label>
+              <Select value={gameModeFilter} onChange={(e) => setGameModeFilter(e.target.value)} className="filter-select min-w-[220px]">
                 <option value="">Todos</option>
                 {gameModeOptions.map(mode => (
                   <option key={mode} value={mode}>{mode}</option>
                 ))}
-              </select>
+              </Select>
             </div>
             <div>
-              <label className="block text-sm font-medium mb-2">Tipo de Arma:</label>
-              <select
-                value={weaponTypeFilter}
-                onChange={(e) => setWeaponTypeFilter(e.target.value)}
-                className="filter-select p-2 bg-gray-700 border border-gray-500 rounded"
-              >
+              <label className="block text-sm font-medium mb-2">Tipo de Arma</label>
+              <Select value={weaponTypeFilter} onChange={(e) => setWeaponTypeFilter(e.target.value)} className="filter-select min-w-[220px]">
                 <option value="">Todos</option>
                 {weaponTypeOptions.map(type => (
                   <option key={type} value={type}>{type}</option>
                 ))}
-              </select>
+              </Select>
             </div>
             <div>
-              <label className="block text-sm font-medium mb-2">Tipo de Alcance:</label>
-              <select
-                value={rangeTypeFilter}
-                onChange={(e) => setRangeTypeFilter(e.target.value)}
-                className="filter-select p-2 bg-gray-700 border border-gray-500 rounded"
-              >
+              <label className="block text-sm font-medium mb-2">Tipo de Alcance</label>
+              <Select value={rangeTypeFilter} onChange={(e) => setRangeTypeFilter(e.target.value)} className="filter-select min-w-[220px]">
                 <option value="">Todos</option>
                 {rangeTypeOptions.map(range => (
                   <option key={range} value={range}>{range}</option>
                 ))}
-              </select>
+              </Select>
             </div>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setGameModeFilter('');
+                setWeaponTypeFilter('');
+                setRangeTypeFilter('');
+              }}
+            >
+              Limpiar filtros
+            </Button>
           </div>
           
           {loading ? (
@@ -337,7 +337,7 @@ const HomePage = () => {
       </section>
 
       {/* Footer */}
-      <footer className="bg-black bg-opacity-50 py-6 text-center">
+      <footer className="bg-black/40 backdrop-blur border-t border-white/10 py-6 text-center">
         <p>&copy; 2026 Delta Force Community. Todos los derechos reservados.</p>
         <p>Recuerda: Juega responsablemente y respeta a la comunidad.</p>
       </footer>

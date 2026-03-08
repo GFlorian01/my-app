@@ -1,13 +1,34 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '../../../lib/supabase';
-import { normalizeWeaponType } from '../../lib/weaponParsing';
+import { parseWeaponCode } from '../../lib/weaponParsing';
 
 export async function GET() {
   try {
     await supabase
       .from('weapon_configs')
       .update({ weapon_type: 'fusil de asalto' })
-      .in('weapon_type', ['Fusil de Asalto', 'Fusil de asalto', 'fusil de asalto']);
+      .in('weapon_type', [
+        'Fusil de Asalto',
+        'Fusil de asalto',
+        'fusil de asalto',
+        'Fuzil de combate',
+        'Fusil de batalla',
+        'Fusil de Batalla',
+        'Battle Rifle',
+      ]);
+    await supabase
+      .from('weapon_configs')
+      .update({ game_mode: 'Operaciones' })
+      .in('game_mode', ['Operaciones', 'Operación: Extracción', 'Operations', 'Operation', 'Conflicto Bélico', 'Warfare']);
+    await supabase
+      .from('weapon_configs')
+      .update({ weapon_type: 'Sub Ametralladora' })
+      .in('weapon_type', ['Subfusil', 'Subametralladora', 'Sub ametralladora', 'subametralladora', 'sub ametralladora']);
+    // Regla especial: SR-3M se considera Sub Ametralladora
+    await supabase
+      .from('weapon_configs')
+      .update({ weapon_type: 'Sub Ametralladora' })
+      .ilike('weapon_name', '%SR-3M%');
 
     const { data, error } = await supabase
       .from('weapon_configs')
@@ -29,12 +50,19 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const newConfig = await request.json();
+    const parsed = parseWeaponCode(newConfig.weaponCode || '');
+    if (!parsed.isValid) {
+      return NextResponse.json({ error: 'Código inválido' }, { status: 400 });
+    }
 
-    // Verificar si el código ya existe
+    // Verificar duplicado por equivalencia (independiente del idioma)
     const { data: existing, error: checkError } = await supabase
       .from('weapon_configs')
       .select('id')
-      .eq('weapon_code', newConfig.weaponCode);
+      .eq('weapon_type', parsed.weaponType)
+      .eq('weapon_name', parsed.weaponName)
+      .eq('game_mode', parsed.gameMode)
+      .like('weapon_code', `%${parsed.codePart}`);
 
     if (checkError) {
       console.error('Error checking for duplicates:', checkError);
@@ -49,10 +77,12 @@ export async function POST(request: NextRequest) {
       .from('weapon_configs')
       .insert([{
         username: newConfig.username,
+        // Guardamos el código original introducido por el usuario
         weapon_code: newConfig.weaponCode,
-        weapon_type: normalizeWeaponType(newConfig.weaponType || ''),
-        weapon_name: newConfig.weaponName,
-        game_mode: newConfig.gameMode,
+        // Guardamos valores canónicos para deduplicación consistente
+        weapon_type: parsed.weaponType,
+        weapon_name: parsed.weaponName,
+        game_mode: 'Operaciones',
         range_type: newConfig.rangeType,
         copy_count: 0
       }])
