@@ -124,15 +124,16 @@ const WeaponList = ({ weaponConfigs, onCopyCountUpdate }: WeaponListProps) => {
                       {config.weaponCode}
                     </span>
                   </div>
-                  <div className="flex items-center justify-between gap-3">
-                    <p className="text-xs text-gray-400">Copiado {config.copy_count || 0} veces</p>
+                  <div className="space-y-2">
                     <Button
                       onClick={() => handleCopy(config.weaponCode, index, config.id!)}
                       size="lg"
-                      className="w-full"
+                      className="w-full h-14 text-xl rounded-xl bg-gradient-to-r from-yellow-400 via-yellow-500 to-amber-500 text-black shadow-[0_10px_25px_-10px_rgba(247,197,53,0.9)] hover:from-amber-300 hover:to-yellow-400 hover:scale-[1.01] active:scale-100 transition-all"
+                      aria-label="Copiar código del arma"
                     >
                       {copiedIndex === index ? '¡Copiado!' : 'Copiar Código'}
                     </Button>
+                    <p className="text-xs text-gray-400 text-center">Copiado {config.copy_count || 0} veces</p>
                   </div>
                 </div>
               </CardContent>

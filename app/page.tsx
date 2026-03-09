@@ -43,6 +43,7 @@ const HomePage = () => {
   const [gameModeFilter, setGameModeFilter] = useState('');
   const [weaponTypeFilter, setWeaponTypeFilter] = useState('');
   const [rangeTypeFilter, setRangeTypeFilter] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
   const [isMobile, setIsMobile] = useState(false);
   const [videoLoaded, setVideoLoaded] = useState(false);
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -148,6 +149,20 @@ const HomePage = () => {
     if (gameModeFilter && config.gameMode !== gameModeFilter) return false;
     if (weaponTypeFilter && config.weaponType !== weaponTypeFilter) return false;
     if (rangeTypeFilter && !config.rangeType.includes(rangeTypeFilter)) return false;
+    if (searchQuery) {
+      const q = searchQuery.trim().toLowerCase();
+      const haystack = [
+        config.username,
+        config.weaponName,
+        config.weaponType,
+        config.gameMode,
+        config.weaponCode,
+      ]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase();
+      if (!haystack.includes(q)) return false;
+    }
     return true;
   }).sort((a, b) => getCreatedAtTime(b) - getCreatedAtTime(a));
 
@@ -287,8 +302,24 @@ const HomePage = () => {
         <div className="max-w-4xl mx-auto">
           <h3 className="section-title text-3xl font-bold text-center mb-10">Configuraciones Compartidas</h3>
           
-          {/* Filtros */}
+          {/* Buscador + Filtros */}
           <div className="filter-bar mb-8 flex flex-wrap items-end justify-center gap-4">
+            <div className="w-full md:w-[480px] relative">
+              <label className="block text-sm font-medium mb-2">Buscar</label>
+              <div className="relative">
+                <svg aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <circle cx="11" cy="11" r="7" strokeWidth="2" />
+                  <path d="M20 20L17 17" strokeWidth="2" strokeLinecap="round" />
+                </svg>
+                <input
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Buscar por arma, tipo, usuario o código..."
+                  className="w-full h-12 pl-11 pr-4 rounded-lg bg-gray-800 border border-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                  aria-label="Buscar configuraciones"
+                />
+              </div>
+            </div>
             <div>
               <label className="block text-sm font-medium mb-2">Modo de Juego</label>
               <Select value={gameModeFilter} onChange={(e) => setGameModeFilter(e.target.value)} className="filter-select min-w-[220px]">
@@ -322,6 +353,7 @@ const HomePage = () => {
                 setGameModeFilter('');
                 setWeaponTypeFilter('');
                 setRangeTypeFilter('');
+                setSearchQuery('');
               }}
             >
               Limpiar filtros
