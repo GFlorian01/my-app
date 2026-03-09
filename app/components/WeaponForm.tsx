@@ -13,6 +13,8 @@ type WeaponFormData = {
   weaponName: string;
   gameMode: string;
   rangeType: string[];
+  features: string[];
+  priceRange: string;
 };
 
 const WeaponForm = ({ onSubmit }: { onSubmit: (data: WeaponFormData) => void }) => {
@@ -21,7 +23,9 @@ const WeaponForm = ({ onSubmit }: { onSubmit: (data: WeaponFormData) => void }) 
   const [weaponType, setWeaponType] = useState('');
   const [weaponName, setWeaponName] = useState('');
   const [gameMode, setGameMode] = useState('Operaciones');
-  const [rangeType, setRangeType] = useState<string[]>([]); // Array para múltiples selecciones
+  const [rangeType, setRangeType] = useState<string[]>([]);
+  const [features, setFeatures] = useState<string[]>([]);
+  const [priceRange, setPriceRange] = useState<string>('');
 
   const applyParsedWeapon = (code: string) => {
     const parsed = parseWeaponCode(code);
@@ -46,6 +50,10 @@ const WeaponForm = ({ onSubmit }: { onSubmit: (data: WeaponFormData) => void }) 
       setRangeType(rangeType.filter(r => r !== range));
     }
   };
+  const handleFeatureChange = (feat: string, checked: boolean) => {
+    if (checked) setFeatures([...features, feat]);
+    else setFeatures(features.filter(f => f !== feat));
+  };
 
   const isValidWeaponCode = (code: string) => {
     const parsed = parseWeaponCode(code);
@@ -58,13 +66,19 @@ const WeaponForm = ({ onSubmit }: { onSubmit: (data: WeaponFormData) => void }) 
       alert('El código del arma no es válido. Asegúrate de copiar el código completo de una build real (formato: Tipo Nombre-Modo-Código20Caracteres).');
       return;
     }
-    onSubmit({ username, weaponCode, weaponType, weaponName, gameMode, rangeType });
+    if (!priceRange) {
+      alert('Selecciona un rango de precio para la build.');
+      return;
+    }
+    onSubmit({ username, weaponCode, weaponType, weaponName, gameMode, rangeType, features, priceRange });
     setUsername('');
     setWeaponCode('');
     setWeaponType('');
     setWeaponName('');
-    setGameMode('Conflicto Bélico');
+    setGameMode('Operaciones');
     setRangeType([]);
+    setFeatures([]);
+    setPriceRange('');
   };
 
   return (
@@ -106,9 +120,7 @@ const WeaponForm = ({ onSubmit }: { onSubmit: (data: WeaponFormData) => void }) 
             </div>
             <div>
               <label htmlFor="gameMode" className="block text-sm font-medium mb-2">Modo</label>
-              <Select id="gameMode" value={gameMode} disabled>
-                <option value="Operaciones">Operaciones</option>
-              </Select>
+              <Input id="gameMode" value={gameMode} readOnly className="cursor-not-allowed bg-gray-700/70" />
             </div>
           </div>
           <div>
@@ -124,6 +136,36 @@ const WeaponForm = ({ onSubmit }: { onSubmit: (data: WeaponFormData) => void }) 
                 </label>
               ))}
             </div>
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-2">Características (múltiple)</label>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              {['Fuego de cadera', 'Precisión', 'Velocidad de movimiento', 'Mira Punto', 'Mira x2', 'Mira x3-x5', 'Mira Zoom F.'].map(f => (
+                <label key={f} className="flex items-center gap-2 text-sm">
+                  <Checkbox
+                    checked={features.includes(f)}
+                    onChange={(e) => handleFeatureChange(f, (e.target as HTMLInputElement).checked)}
+                  />
+                  {f}
+                </label>
+              ))}
+            </div>
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-2">Rango de Precio (único)</label>
+            <Select
+              value={priceRange}
+              onChange={(e) => setPriceRange(e.target.value)}
+              required
+            >
+              <option value="" disabled>Selecciona un rango</option>
+              <option value="≤150k">150k o menos</option>
+              <option value="150k-250k">150k a 250k</option>
+              <option value="250k-350k">250k a 350k</option>
+              <option value="350k-500k">350k a 500k</option>
+              <option value="500k-650k">500k a 650k</option>
+              <option value="≥650k">650k o más</option>
+            </Select>
           </div>
           <Button type="submit" size="lg" className="w-full">Compartir Configuración</Button>
         </form>

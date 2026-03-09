@@ -15,7 +15,9 @@ type WeaponConfig = {
   weaponType: string;
   weaponName: string;
   gameMode: string;
-  rangeType: string[]; // Cambiado a array para múltiples selecciones
+  rangeType: string[];
+  features?: string[];
+  priceRange?: string;
   copy_count?: number;
   created_at?: string;
 };
@@ -32,6 +34,8 @@ type RawWeaponConfig = {
   game_mode?: string;
   gameMode?: string;
   range_type?: unknown;
+  features?: string[];
+  priceRange?: string;
   copy_count?: number;
   created_at?: string;
 };
@@ -50,6 +54,27 @@ const HomePage = () => {
 
   // Función para normalizar un item de Supabase
   const normalizeWeaponConfig = (item: RawWeaponConfig): WeaponConfig => {
+    const rangeRaw = item.range_type;
+    const alcance: string[] = [];
+    const feats: string[] = [];
+    let price = '';
+    const push = (v: string) => {
+      const s = String(v);
+      if (s.startsWith('alcance:')) alcance.push(s.slice(8));
+      else if (s.startsWith('feature:')) feats.push(s.slice(8));
+      else if (s.startsWith('price:')) price = s.slice(6);
+      else alcance.push(s);
+    };
+    if (Array.isArray(rangeRaw)) {
+      rangeRaw.forEach(push);
+    } else if (typeof rangeRaw === 'string') {
+      try {
+        const parsed = JSON.parse(rangeRaw);
+        if (Array.isArray(parsed)) parsed.forEach(push);
+      } catch {
+        push(rangeRaw);
+      }
+    }
     return {
       id: item.id,
       username: item.username || '',
@@ -57,18 +82,9 @@ const HomePage = () => {
       weaponType: normalizeWeaponType(item.weapon_type || item.weaponType || ''),
       weaponName: item.weapon_name || item.weaponName || '',
       gameMode: item.game_mode || item.gameMode || '',
-      rangeType: (() => {
-        if (Array.isArray(item.range_type)) return item.range_type as string[];
-        if (typeof item.range_type === 'string') {
-          try {
-            const parsed = JSON.parse(item.range_type);
-            return Array.isArray(parsed) ? parsed : [];
-          } catch {
-            return [];
-          }
-        }
-        return [];
-      })(),
+      rangeType: alcance,
+      features: feats,
+      priceRange: price || undefined,
       copy_count: item.copy_count || 0,
       created_at: item.created_at,
     };

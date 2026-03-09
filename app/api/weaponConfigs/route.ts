@@ -73,6 +73,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Esta build ya está guardada' }, { status: 400 });
     }
 
+    const features: string[] = Array.isArray(newConfig.features) ? newConfig.features : [];
+    const priceRange: string = newConfig.priceRange || '';
+    const alcance: string[] = Array.isArray(newConfig.rangeType) ? newConfig.rangeType : [];
+    const combinedRange: string[] = [
+      ...alcance.map((r: string) => `alcance:${r}`),
+      ...features.map((f: string) => `feature:${f}`),
+      ...(priceRange ? [`price:${priceRange}`] : []),
+    ];
+
     const { data, error } = await supabase
       .from('weapon_configs')
       .insert([{
@@ -83,7 +92,7 @@ export async function POST(request: NextRequest) {
         weapon_type: parsed.weaponType,
         weapon_name: parsed.weaponName,
         game_mode: 'Operaciones',
-        range_type: newConfig.rangeType,
+        range_type: combinedRange,
         copy_count: 0
       }])
       .select();

@@ -13,6 +13,8 @@ type WeaponConfig = {
   weaponName: string;
   gameMode: string;
   rangeType: string[];
+  features?: string[];
+  priceRange?: string;
   copy_count?: number;
   created_at?: string;
 };
@@ -39,6 +41,10 @@ const WeaponList = ({ weaponConfigs, onCopyCountUpdate }: WeaponListProps) => {
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
   const cooldownTimers = useRef<Record<number, ReturnType<typeof setTimeout> | null>>({});
   const copyCooldownMs = 2000;
+  const pageSize = 9; // 3x3 máximo por página
+  const [page, setPage] = useState(1);
+  const totalPages = Math.max(1, Math.ceil(weaponConfigs.length / pageSize));
+  const pageDisplay = Math.min(Math.max(page, 1), totalPages);
 
   const handleCopy = async (code: string, index: number, id: number) => {
     try {
@@ -77,11 +83,12 @@ const WeaponList = ({ weaponConfigs, onCopyCountUpdate }: WeaponListProps) => {
       {weaponConfigs.length === 0 ? (
         <p className="text-center text-gray-400">No hay configuraciones compartidas aún. ¡Sé el primero en compartir!</p>
       ) : (
+        <>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {weaponConfigs.map((config, index) => {
+          {weaponConfigs.slice((pageDisplay - 1) * pageSize, pageDisplay * pageSize).map((config, index) => {
             const displayName = normalizeWeaponDisplayName(config.weaponName, config.weaponType);
             return (
-            <Card key={index} className="hover:shadow-xl transition">
+            <Card key={`${config.id ?? `${config.username}-${index}`}-${pageDisplay}`} className="hover:shadow-xl transition">
               <CardContent className="p-0">
                 <div className="p-6">
                   <div className="relative mb-4">
@@ -113,6 +120,18 @@ const WeaponList = ({ weaponConfigs, onCopyCountUpdate }: WeaponListProps) => {
                     </Badge>
                     <Badge>{config.gameMode}</Badge>
                   </div>
+                  {Array.isArray(config.features) && config.features.length > 0 && (
+                    <div className="mb-2">
+                      <span className="text-xs text-gray-400">Características:</span>{' '}
+                      <span className="text-sm">{config.features.join(', ')}</span>
+                    </div>
+                  )}
+                  {config.priceRange && (
+                    <div className="mb-2">
+                      <span className="text-xs text-gray-400">Rango de Precio:</span>{' '}
+                      <span className="text-sm">{config.priceRange}</span>
+                    </div>
+                  )}
                   <p className="text-sm text-gray-300 mb-2">Por {config.username}</p>
                   <div className="mb-2">
                     <span className="text-xs text-gray-400">Alcance:</span>{' '}
@@ -140,6 +159,28 @@ const WeaponList = ({ weaponConfigs, onCopyCountUpdate }: WeaponListProps) => {
             </Card>
           )})}
         </div>
+        {totalPages > 1 && (
+          <div className="mt-6 flex items-center justify-center gap-4">
+            <Button
+              variant="outline"
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={pageDisplay === 1}
+            >
+              Anterior
+            </Button>
+            <span className="text-sm text-gray-300">
+              Página {pageDisplay} de {totalPages}
+            </span>
+            <Button
+              variant="outline"
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              disabled={pageDisplay === totalPages}
+            >
+              Siguiente
+            </Button>
+          </div>
+        )}
+        </>
       )}
     </div>
   );
