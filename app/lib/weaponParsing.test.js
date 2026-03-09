@@ -114,6 +114,18 @@ test('mapea imágenes para 20 combinaciones', () => {
   }
 });
 
+test('SR-3M variantes mapean a FAC_SR-3M.png', () => {
+  const variants = [
+    ['Sub Ametralladora', 'SR-3M'],
+    ['subfusil', 'SR-3M'],
+    ['Sub Ametralladora', 'sr-3m'],
+    ['Sub Ametralladora', 'sr3m'],
+  ];
+  for (const [type, name] of variants) {
+    const result = getWeaponImagePath(type, name);
+    assert.equal(result, '/arms/FAC_SR-3M.png');
+  }
+});
 test('archivos listados coinciden con public/arms', () => {
   const listed = new Set(__listArmsFiles().map(f => f.toLowerCase()));
   const dir = path.join(process.cwd(), 'public', 'arms');

@@ -262,8 +262,19 @@ const typePrefixMap = {
 };
 
 const resolveWeaponPrefix = (weaponType) => {
-  const normalized = normalizeKey(weaponType);
-  return typePrefixMap[normalized] || '';
+  const n = normalizeKey(weaponType);
+  if (['fusil de asalto', 'assault rifle', 'fusil de batalla', 'battle rifle'].includes(n)) return 'FA';
+  if (['fuzil de combate', 'fusil de combate'].includes(n)) return 'FAC';
+  if (['subfusil', 'subametralladora', 'sub ametralladora', 'submachine gun', 'smg'].includes(n)) return 'Sub';
+  if (['pistola', 'pistol'].includes(n)) return 'P';
+  if (['escopeta', 'shotgun'].includes(n)) return 'Esc';
+  if (['francotirador', 'sniper rifle', 'sniper', 'fusil de francotirador'].includes(n)) return 'FF';
+  if (['fusil de tirador', 'marksman rifle', 'dmr'].includes(n)) return 'FT';
+  if (['ametralladora ligera', 'light machine gun', 'lmg'].includes(n)) return 'AL';
+  if (['ametralladora general', 'general purpose machine gun', 'general-purpose machine gun', 'gpmg'].includes(n)) return 'AG';
+  if (['arco', 'bow'].includes(n)) return 'Arco';
+  if (['revolver', 'revólver'].includes(n)) return 'R';
+  return typePrefixMap[n] || '';
 };
 
 const buildNameVariants = (rawName) => {
